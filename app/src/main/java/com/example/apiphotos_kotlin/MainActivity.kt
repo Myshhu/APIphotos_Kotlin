@@ -1,25 +1,28 @@
 package com.example.apiphotos_kotlin
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.view.View
+import android.widget.ExpandableListView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONArray
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.lang.StringBuilder
 import java.net.HttpURLConnection
 import java.net.URL
-import java.sql.Connection
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var photoInfoJSONArray: JSONArray
+    //private lateinit var expandableListView: ExpandableListView
+    private var expandableListAdapter: MyExpandableListAdapter = MyExpandableListAdapter(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        expandableListView.setAdapter(expandableListAdapter)
 
         downloadPhotoInfoJSONArray()
     }
@@ -61,5 +64,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun MainActivity.makeToast(text: String) {
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+    }
+
+    fun btnLoadDownloadedDataClick(v: View) {
+        expandableListAdapter.setPhotoInfoJSONArray(photoInfoJSONArray)
+        expandableListAdapter.notifyDataSetChanged()
     }
 }
