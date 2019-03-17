@@ -31,7 +31,7 @@ class MyExpandableListAdapter(
     override fun hasStableIds() = false
 
     override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View? {
-        val groupTitle: String = listOfAllAlbumIds.get(groupPosition).toString()
+        val groupTitle: String = listOfAllAlbumIds[groupPosition].toString()
         var view = convertView
         if (view == null) {
             val layoutInflater: LayoutInflater =
@@ -67,6 +67,15 @@ class MyExpandableListAdapter(
 
     override fun getGroupId(groupPosition: Int): Long = groupPosition.toLong()
 
+
+    enum class PhotoTextViewStrings {
+        AlbumId,
+        ID,
+        Title,
+        Url,
+        ThumbnailUrl
+    }
+
     override fun getChildView(
         groupPosition: Int,
         childPosition: Int,
@@ -74,39 +83,46 @@ class MyExpandableListAdapter(
         convertView: View?,
         parent: ViewGroup?
     ): View? {
-        var stringAlbumID: String? = null
-        var stringID: String? = null
-        var stringTitle: String? = null
-        var stringUrl: String? = null
-        var stringThumbnailUrl: String? = null
-        //Get text values from JSON
-        stringAlbumID = (getChild(groupPosition, childPosition) as JSONObject).getString("albumId")
-        stringID = (getChild(groupPosition, childPosition) as JSONObject).getString("id")
-        stringTitle = (getChild(groupPosition, childPosition) as JSONObject).getString("title")
-        stringUrl = (getChild(groupPosition, childPosition) as JSONObject).getString("url")
-        stringThumbnailUrl = (getChild(groupPosition, childPosition) as JSONObject).getString("thumbnailUrl")
 
-        var view: View? = convertView
-        if (view == null) {
-            val layoutInflater: LayoutInflater =
-                context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            view = layoutInflater.inflate(R.layout.list_item, null)
-        }
+        val textViewStringsList: MutableList<String> = ArrayList()
+
+        //Get text values from JSON
+        initTextViewStringsList(textViewStringsList, groupPosition, childPosition)
 
         //Setting text values
-        val albumId: TextView? = view?.findViewById(R.id.albumId)
-        albumId?.text = stringAlbumID
-        val id: TextView? = view?.findViewById(R.id.id)
-        id?.text = stringID
-        val title: TextView? = view?.findViewById(R.id.title)
-        title?.text = stringTitle
-        val url: TextView? = view?.findViewById(R.id.url)
-        url?.text = stringUrl
-        val tnUrl: TextView? = view?.findViewById(R.id.thumbnailUrl)
-        tnUrl?.text = stringThumbnailUrl
+        val view: View? = createConvertView(convertView)
+        setTextViewsValues(view, textViewStringsList)
 
         //Setting image
         val imageView: ImageView? = view?.findViewById(R.id.image)
+        downloadAndSetImageViewPicture(imageView, groupPosition, childPosition)
+
+        return view
+    }
+
+    private fun initTextViewStringsList(
+        textViewStringsList: MutableList<String>,
+        groupPosition: Int,
+        childPosition: Int
+    ) {
+        textViewStringsList.add((getChild(groupPosition, childPosition) as JSONObject).getString("albumId"))
+        textViewStringsList.add((getChild(groupPosition, childPosition) as JSONObject).getString("id"))
+        textViewStringsList.add((getChild(groupPosition, childPosition) as JSONObject).getString("title"))
+        textViewStringsList.add((getChild(groupPosition, childPosition) as JSONObject).getString("url"))
+        textViewStringsList.add((getChild(groupPosition, childPosition) as JSONObject).getString("thumbnailUrl"))
+    }
+
+    private fun createConvertView(convertView: View?): View? {
+        var tempView: View? = convertView
+        if (tempView == null) {
+            val layoutInflater: LayoutInflater =
+                context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            tempView = layoutInflater.inflate(R.layout.list_item, null)
+        }
+        return tempView
+    }
+
+    private fun downloadAndSetImageViewPicture(imageView: ImageView?, groupPosition: Int, childPosition: Int) {
         Thread {
             //Load image from URL
             val bitmap = BitmapFactory.decodeStream(
@@ -115,23 +131,35 @@ class MyExpandableListAdapter(
             //Set image to imageView
             (context as MainActivity).runOnUiThread { imageView?.setImageBitmap(bitmap) }
         }.start()
-        return view
+    }
+
+    private fun setTextViewsValues(view: View?, textViewStringsList: MutableList<String>) {
+        val albumId: TextView? = view?.findViewById(R.id.albumId)
+        albumId?.text = textViewStringsList[PhotoTextViewStrings.AlbumId.ordinal]
+
+        val id: TextView? = view?.findViewById(R.id.id)
+        id?.text = textViewStringsList[PhotoTextViewStrings.ID.ordinal]
+
+        val title: TextView? = view?.findViewById(R.id.title)
+        title?.text = textViewStringsList[PhotoTextViewStrings.Title.ordinal]
+
+        val url: TextView? = view?.findViewById(R.id.url)
+        url?.text = textViewStringsList[PhotoTextViewStrings.Url.ordinal]
+
+        val tnUrl: TextView? = view?.findViewById(R.id.thumbnailUrl)
+        tnUrl?.text = textViewStringsList[PhotoTextViewStrings.ThumbnailUrl.ordinal]
     }
 
     override fun getChildId(groupPosition: Int, childPosition: Int): Long = childPosition.toLong()
 
     override fun getGroupCount(): Int {
         val uniqueAlbumIdsSet: HashSet<Int> = HashSet()
-
         for (i: Int in 0 until (photoInfoJSONArray?.length() ?: 0)) {
             photoInfoJSONArray?.getJSONObject(i)?.getInt("albumId")?.let {
-                uniqueAlbumIdsSet.add(
-                    it
-                )
+                uniqueAlbumIdsSet.add(it)
             }
         }
         listOfAllAlbumIds = uniqueAlbumIdsSet.sorted()
         return listOfAllAlbumIds.size
     }
-
 }
