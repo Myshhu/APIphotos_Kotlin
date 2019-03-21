@@ -39,7 +39,7 @@ class MyExpandableListAdapter(
             view = layoutInflater.inflate(R.layout.list_group, null)
         }
         val groupTitleTextView: TextView? = view?.findViewById(R.id.groupTitle)
-        groupTitleTextView?.text = groupTitle
+        groupTitleTextView?.text = "Album: $groupTitle"
         return view
     }
 
@@ -84,18 +84,21 @@ class MyExpandableListAdapter(
         parent: ViewGroup?
     ): View? {
 
-        val textViewStringsList: MutableList<String> = ArrayList()
-
-        //Get text values from JSON
-        initTextViewStringsList(textViewStringsList, groupPosition, childPosition)
-
-        //Setting text values
         val view: View? = createConvertView(convertView)
-        setTextViewsValues(view, textViewStringsList)
 
-        //Setting image
-        val imageView: ImageView? = view?.findViewById(R.id.image)
-        downloadAndSetImageViewPicture(imageView, groupPosition, childPosition)
+        Thread {
+            val textViewStringsList: MutableList<String> = ArrayList()
+
+            //Get text values from JSON
+            initTextViewStringsList(textViewStringsList, groupPosition, childPosition)
+
+            //Setting text values
+            setTextViewsValues(view, textViewStringsList)
+
+            //Setting image
+            val imageView: ImageView? = view?.findViewById(R.id.image)
+            downloadAndSetImageViewPicture(imageView, groupPosition, childPosition)
+        }.start()
 
         return view
     }
@@ -126,7 +129,7 @@ class MyExpandableListAdapter(
         Thread {
             //Load image from URL
             val bitmap = BitmapFactory.decodeStream(
-                URL((getChild(groupPosition, childPosition) as JSONObject).getString("url")).content as InputStream
+                URL((getChild(groupPosition, childPosition) as JSONObject).getString("thumbnailUrl")).content as InputStream
             )
             //Set image to imageView
             (context as MainActivity).runOnUiThread { imageView?.setImageBitmap(bitmap) }
@@ -134,20 +137,22 @@ class MyExpandableListAdapter(
     }
 
     private fun setTextViewsValues(view: View?, textViewStringsList: MutableList<String>) {
-        val albumId: TextView? = view?.findViewById(R.id.albumId)
-        albumId?.text = textViewStringsList[PhotoTextViewStrings.AlbumId.ordinal]
+        (context as MainActivity).runOnUiThread {
+            val albumId: TextView? = view?.findViewById(R.id.albumId)
+            albumId?.text = "Album: " + textViewStringsList[PhotoTextViewStrings.AlbumId.ordinal]
 
-        val id: TextView? = view?.findViewById(R.id.id)
-        id?.text = textViewStringsList[PhotoTextViewStrings.ID.ordinal]
+            val id: TextView? = view?.findViewById(R.id.id)
+            id?.text = "Photo id: " + textViewStringsList[PhotoTextViewStrings.ID.ordinal]
 
-        val title: TextView? = view?.findViewById(R.id.title)
-        title?.text = textViewStringsList[PhotoTextViewStrings.Title.ordinal]
+            val title: TextView? = view?.findViewById(R.id.title)
+            title?.text = textViewStringsList[PhotoTextViewStrings.Title.ordinal]
 
-        val url: TextView? = view?.findViewById(R.id.url)
-        url?.text = textViewStringsList[PhotoTextViewStrings.Url.ordinal]
+            val url: TextView? = view?.findViewById(R.id.url)
+            url?.text = textViewStringsList[PhotoTextViewStrings.Url.ordinal]
 
-        val tnUrl: TextView? = view?.findViewById(R.id.thumbnailUrl)
-        tnUrl?.text = textViewStringsList[PhotoTextViewStrings.ThumbnailUrl.ordinal]
+            val tnUrl: TextView? = view?.findViewById(R.id.thumbnailUrl)
+            tnUrl?.text = textViewStringsList[PhotoTextViewStrings.ThumbnailUrl.ordinal]
+        }
     }
 
     override fun getChildId(groupPosition: Int, childPosition: Int): Long = childPosition.toLong()

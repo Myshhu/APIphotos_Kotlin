@@ -11,11 +11,12 @@
         android:layout_height="wrap_content">
 
         <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="2"
-            android:scaleType="center"
-            app:srcCompat="@mipmap/ic_launcher_round" />
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_weight="2"
+                android:scaleType="center"
+                app:srcCompat="@mipmap/ic_launcher_round" android:adjustViewBounds="false"/>
 
         <TextView
             android:id="@+id/groupTitle"
@@ -24,7 +25,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:text="Test text"
-            android:textSize="50sp" />
+            android:textSize="35sp" />
 
     </LinearLayout>
 
